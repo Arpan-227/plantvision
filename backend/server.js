@@ -1,49 +1,57 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import fetch from "node-fetch";
+import dotenv from "dotenv"; // ✅ load .env file
+
+dotenv.config(); // ✅ activate .env
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-// ✅ Your correct Plant.id FREE API key
-const API_KEY = "dSuQA3bSsMXBfOatwvxsDSnCFJNf7ii0x2UxlC55J3HFkJagkP";
+// ✅ use key from .env
+const apiKey = process.env.API_KEY;
+
 
 app.use(cors());
 app.use(bodyParser.json({ limit: "10mb" }));
 
+// 🔍 Main route to handle image detection
 app.post("/api/detect", async (req, res) => {
   console.log("📥 Incoming request at /api/detect");
+
+  const { images } = req.body;
 
   try {
     const response = await fetch("https://api.plant.id/v2/identify", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Api-Key": API_KEY
+        "Api-Key": apiKey,
       },
       body: JSON.stringify({
-        images: req.body.images,
-        plant_language: "en",
-        plant_details: ["common_names", "url", "name_authority", "wiki_description", "taxonomy"]
-      })
+        images,
+        similar_images: true,
+        disease_details: true,
+      }),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      console.error("❌ Plant.id API Error:", data);
-      return res.status(500).json({ error: "Plant.id API error", details: data });
+      const err = await response.text();
+      console.error("❌ Plant.id API Error:", err);
+      return res.status(500).json({ error: "Plant.id API request failed" });
     }
 
-    console.log("✅ Plant ID success");
+    const data = await response.json();
+    console.log("✅ Detection success");
     res.json(data);
   } catch (err) {
-    console.error("🔥 Backend crash:", err);
-    res.status(500).json({ error: "Backend error", message: err.message });
+    console.error("❌ Request failed:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
+// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🌱 Plant API proxy is running at http://localhost:${PORT}`);
 });

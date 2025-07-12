@@ -68,7 +68,7 @@ export default function Detection({ lang = "en" }) {
 
     try {
       const base64 = await getBase64(file);
-      const res = await fetch("http://localhost:5000/api/detect", {
+      const res = await fetch("https://plantvision-backend.onrender.com/api/detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ images: [base64] })
