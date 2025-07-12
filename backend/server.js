@@ -2,21 +2,22 @@ import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
 import fetch from "node-fetch";
-import dotenv from "dotenv"; // ✅ load .env file
+import dotenv from "dotenv";
 
-dotenv.config(); // ✅ activate .env
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// ✅ use key from .env
 const apiKey = process.env.API_KEY;
 
+// ✅ CORS config — FIX
+app.use(cors({
+  origin: "*",
+  methods: ["POST"]
+}));
 
-app.use(cors());
 app.use(bodyParser.json({ limit: "10mb" }));
 
-// 🔍 Main route to handle image detection
 app.post("/api/detect", async (req, res) => {
   console.log("📥 Incoming request at /api/detect");
 
@@ -51,7 +52,6 @@ app.post("/api/detect", async (req, res) => {
   }
 });
 
-// ✅ Start server
 app.listen(PORT, () => {
   console.log(`🌱 Plant API proxy is running at http://localhost:${PORT}`);
 });
