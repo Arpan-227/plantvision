@@ -30,10 +30,10 @@ app.post("/api/detect", async (req, res) => {
         "Content-Type": "application/json",
         "Api-Key": apiKey,
       },
-      body: JSON.stringify({
+     body: JSON.stringify({
         images,
         similar_images: true,
-        disease_details: true,
+        disease_details: ["description", "common_names", "treatment"],
       }),
     });
 
