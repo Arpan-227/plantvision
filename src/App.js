@@ -1,23 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import Header from "./components/Header";
+import HeroSection from "./components/HeroSection";
+import AboutSection from "./components/AboutSection";
+import Detection from "./components/Detection";
+import Footer from "./components/Footer";
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+  const [lang, setLang] = useState("en");
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="bg-white text-black dark:bg-gray-900 dark:text-white transition-colors">
+      <Header
+        toggleTheme={() => setDarkMode(!darkMode)}
+        darkMode={darkMode}
+        lang={lang}
+        setLang={setLang}
+      />
+      <HeroSection lang={lang} />
+      <AboutSection lang={lang} />
+      <Detection lang={lang} />
+      <Footer />
     </div>
   );
 }
