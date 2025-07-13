@@ -1,27 +1,28 @@
 import React from "react";
 
-export default function HeroSection() {
-  const scrollToDetect = () => {
-    const el = document.getElementById("detect");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
+export default function HeroSection({ lang }) {
+  const t = {
+    en: {
+      title: "Plant Identification Made Easy",
+      subtitle: "Upload a photo and get detailed plant info instantly.",
+      button: "🌿 Start Detecting"
+    },
+    hi: {
+      title: "पौधों की पहचान अब आसान",
+      subtitle: "एक फोटो अपलोड करें और पौधे की जानकारी पाएं।",
+      button: "🌿 पहचान शुरू करें"
+    }
+  }[lang];
 
   return (
-    <section
-      id="hero"
-      className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 bg-gradient-to-br from-green-100 to-green-200 dark:from-gray-800 dark:to-gray-900"
-    >
-      <h2 className="text-4xl md:text-5xl font-bold text-green-800 dark:text-green-300 mb-4">
-        Discover the Name of Any Plant Instantly
-      </h2>
-      <p className="max-w-xl text-gray-700 dark:text-gray-300 text-lg mb-8">
-        Upload a photo of any plant and let our intelligent recognition system find its species, genus, and more!
-      </p>
+    <section className="text-center py-20 bg-green-200 dark:bg-gray-800">
+      <h2 className="text-4xl font-bold mb-4 text-green-800 dark:text-green-300">{t.title}</h2>
+      <p className="mb-6 text-gray-700 dark:text-gray-300">{t.subtitle}</p>
       <button
-        onClick={scrollToDetect}
-        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 text-lg rounded-full font-semibold transition duration-300 shadow-md"
+        onClick={() => document.getElementById("detect")?.scrollIntoView({ behavior: "smooth" })}
+        className="px-6 py-3 bg-green-600 text-white rounded-full font-semibold hover:bg-green-700 transition"
       >
-        🌿 Start Detection
+        {t.button}
       </button>
     </section>
   );
