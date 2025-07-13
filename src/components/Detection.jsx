@@ -13,20 +13,18 @@ export default function Detection({ lang = "en" }) {
   const [selectedPlant, setSelectedPlant] = useState(null);
 
   const t = {
-    en: {
-      title: "Upload a Plant Image",
-      subtitle: "Drag and drop or upload a plant photo to identify its species.",
-      uploadPlaceholder: "🌿 Drag & drop image here or click to upload",
-      analyze: "Analyze Plant",
-      reset: "Reset",
-      error: "Please upload a valid image file.",
-      search: "Search plant name or genus...",
-      common: "Common Names",
-      genus: "Genus",
-      confidence: "Confidence",
-      more: "View more →"
-    }
-  }[lang];
+    title: "Upload a Plant Image",
+    subtitle: "Drag and drop or upload a plant photo to identify its species.",
+    uploadPlaceholder: "🌿 Drag & drop image here or click to upload",
+    analyze: "Analyze Plant",
+    reset: "Reset",
+    error: "Please upload a valid image file.",
+    search: "Search plant name or genus...",
+    common: "Common Names",
+    genus: "Genus",
+    confidence: "Confidence",
+    more: "View more →"
+  };
 
   const handleImageUpload = (e) => {
     const selected = e.target.files?.[0];
@@ -79,34 +77,30 @@ export default function Detection({ lang = "en" }) {
     setResult(null);
     setError("");
     setSearch("");
+    setSelectedPlant(null);
   };
 
   const suggestions = result?.suggestions || [];
 
-  const fuse =
-    suggestions.length > 0
-      ? new Fuse(suggestions, {
-          keys: [
-            "plant_name",
-            "plant_details.taxonomy.genus",
-            "plant_details.common_names",
-            "plant_details.scientific_name"
-          ],
-          threshold: 0.4
-        })
-      : null;
+  const fuse = new Fuse(suggestions, {
+    keys: [
+      "plant_name",
+      "plant_details.common_names",
+      "plant_details.taxonomy.genus",
+      "plant_details.scientific_name"
+    ],
+    threshold: 0.3
+  });
 
   const filteredResults =
-    search.trim() && fuse
-      ? fuse.search(search.trim()).map((r) => r.item)
-      : suggestions;
+    search.trim() === ""
+      ? suggestions
+      : fuse.search(search.trim()).map((r) => r.item);
 
   return (
     <section id="detect" className="py-20 bg-green-50 dark:bg-gray-900 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold mb-4 text-green-700 dark:text-green-400">
-          {t.title}
-        </h2>
+        <h2 className="text-3xl font-bold mb-4 text-green-700 dark:text-green-400">{t.title}</h2>
         <p className="text-gray-600 dark:text-gray-300 mb-6">{t.subtitle}</p>
 
         <div
@@ -119,20 +113,10 @@ export default function Detection({ lang = "en" }) {
           }}
           className="border-4 border-dashed rounded-xl p-6 bg-white dark:bg-gray-800 hover:shadow-lg transition"
         >
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-            id="upload"
-          />
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="upload" />
           <label htmlFor="upload" className="block cursor-pointer">
             {preview ? (
-              <img
-                src={preview}
-                alt="Preview"
-                className="mx-auto max-h-64 object-contain rounded shadow-md"
-              />
+              <img src={preview} alt="Preview" className="mx-auto max-h-64 object-contain rounded shadow-md" />
             ) : (
               <p className="text-lg">{t.uploadPlaceholder}</p>
             )}
@@ -173,18 +157,10 @@ export default function Detection({ lang = "en" }) {
                   key={index}
                   className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md hover:shadow-xl transition transform hover:scale-105"
                 >
-                  <h3 className="text-lg font-bold text-green-700 dark:text-green-400 mb-1">
-                    {plant.plant_name}
-                  </h3>
-                  <p className="text-sm mb-1">
-                    🌿 {t.common}: {plant.plant_details?.common_names?.join(", ") || "N/A"}
-                  </p>
-                  <p className="text-sm mb-1">
-                    🔬 {t.genus}: {plant.plant_details?.taxonomy?.genus || "N/A"}
-                  </p>
-                  <p className="text-sm mb-1">
-                    📊 {t.confidence}: {(plant.probability * 100).toFixed(2)}%
-                  </p>
+                  <h3 className="text-lg font-bold text-green-700 dark:text-green-400 mb-1">{plant.plant_name}</h3>
+                  <p className="text-sm mb-1">🌿 {t.common}: {plant.plant_details?.common_names?.join(", ") || "N/A"}</p>
+                  <p className="text-sm mb-1">🔬 {t.genus}: {plant.plant_details?.taxonomy?.genus || "N/A"}</p>
+                  <p className="text-sm mb-1">📊 {t.confidence}: {(plant.probability * 100).toFixed(2)}%</p>
                   <p className="text-sm mt-2 italic text-gray-600 dark:text-gray-400">
                     {plant.plant_details?.wiki_description?.value?.slice(0, 100) || "No description available."}
                   </p>
@@ -201,7 +177,7 @@ export default function Detection({ lang = "en" }) {
         )}
       </div>
 
-      {/* Fullscreen modal */}
+      {/* Modal for plant details */}
       <PlantModal plant={selectedPlant} onClose={() => setSelectedPlant(null)} />
     </section>
   );
