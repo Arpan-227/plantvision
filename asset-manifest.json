@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/plantvision/static/css/main.8a02e5b6.css",
-    "main.js": "/plantvision/static/js/main.cfa1348b.js",
+    "main.css": "/plantvision/static/css/main.bab1ad12.css",
+    "main.js": "/plantvision/static/js/main.d2fe1641.js",
     "index.html": "/plantvision/index.html",
-    "main.8a02e5b6.css.map": "/plantvision/static/css/main.8a02e5b6.css.map",
-    "main.cfa1348b.js.map": "/plantvision/static/js/main.cfa1348b.js.map"
+    "main.bab1ad12.css.map": "/plantvision/static/css/main.bab1ad12.css.map",
+    "main.d2fe1641.js.map": "/plantvision/static/js/main.d2fe1641.js.map"
   },
   "entrypoints": [
-    "static/css/main.8a02e5b6.css",
-    "static/js/main.cfa1348b.js"
+    "static/css/main.bab1ad12.css",
+    "static/js/main.d2fe1641.js"
   ]
 }
