@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Trash2, Loader2 } from "lucide-react";
-import classNames from "classnames";
 import Fuse from "fuse.js";
+import PlantModal from "./PlantModal";
 
 export default function Detection({ lang = "en" }) {
   const [file, setFile] = useState(null);
@@ -10,6 +10,7 @@ export default function Detection({ lang = "en" }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [selectedPlant, setSelectedPlant] = useState(null);
 
   const t = {
     en: {
@@ -24,19 +25,6 @@ export default function Detection({ lang = "en" }) {
       genus: "Genus",
       confidence: "Confidence",
       more: "View more →"
-    },
-    hi: {
-      title: "पौधे की छवि अपलोड करें",
-      subtitle: "पौधे की प्रजाति की पहचान के लिए छवि खींचें और छोड़ें या अपलोड करें।",
-      uploadPlaceholder: "🌿 छवि खींचें और छोड़ें या क्लिक करके अपलोड करें",
-      analyze: "पौधे की पहचान करें",
-      reset: "रीसेट करें",
-      error: "कृपया एक मान्य छवि फ़ाइल अपलोड करें।",
-      search: "पौधे का नाम या वंश खोजें...",
-      common: "सामान्य नाम",
-      genus: "वंश",
-      confidence: "विश्वास स्तर",
-      more: "और देखें →"
     }
   }[lang];
 
@@ -76,7 +64,6 @@ export default function Detection({ lang = "en" }) {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || "API request failed.");
-
       setResult(data);
     } catch (err) {
       console.error("Detection failed:", err);
@@ -94,16 +81,25 @@ export default function Detection({ lang = "en" }) {
     setSearch("");
   };
 
+  const suggestions = result?.suggestions || [];
+
   const fuse =
-    result?.suggestions?.length > 0
-      ? new Fuse(result.suggestions, {
-          keys: ["plant_name", "plant_details.taxonomy.genus"],
+    suggestions.length > 0
+      ? new Fuse(suggestions, {
+          keys: [
+            "plant_name",
+            "plant_details.taxonomy.genus",
+            "plant_details.common_names",
+            "plant_details.scientific_name"
+          ],
           threshold: 0.4
         })
       : null;
 
   const filteredResults =
-    search && fuse ? fuse.search(search).map((r) => r.item) : result?.suggestions || [];
+    search.trim() && fuse
+      ? fuse.search(search.trim()).map((r) => r.item)
+      : suggestions;
 
   return (
     <section id="detect" className="py-20 bg-green-50 dark:bg-gray-900 px-6">
@@ -111,9 +107,7 @@ export default function Detection({ lang = "en" }) {
         <h2 className="text-3xl font-bold mb-4 text-green-700 dark:text-green-400">
           {t.title}
         </h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          {t.subtitle}
-        </p>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">{t.subtitle}</p>
 
         <div
           onDragOver={(e) => e.preventDefault()}
@@ -164,7 +158,7 @@ export default function Detection({ lang = "en" }) {
 
         {error && <p className="mt-4 text-red-600 dark:text-red-400 font-medium">⚠️ {error}</p>}
 
-        {result?.suggestions?.length > 0 && (
+        {filteredResults.length > 0 && (
           <div className="mt-10">
             <input
               type="text"
@@ -182,26 +176,33 @@ export default function Detection({ lang = "en" }) {
                   <h3 className="text-lg font-bold text-green-700 dark:text-green-400 mb-1">
                     {plant.plant_name}
                   </h3>
-                  <p className="text-sm mb-1">🌿 {t.common}: {plant.plant_details.common_names?.join(", ")}</p>
-                  <p className="text-sm mb-1">🔬 {t.genus}: {plant.plant_details.taxonomy?.genus}</p>
-                  <p className="text-sm mb-1">📊 {t.confidence}: {(plant.probability * 100).toFixed(2)}%</p>
-                  <p className="text-sm mt-2 italic text-gray-600 dark:text-gray-400">
-                    {plant.plant_details.wiki_description?.value?.slice(0, 100) || "No description."}
+                  <p className="text-sm mb-1">
+                    🌿 {t.common}: {plant.plant_details?.common_names?.join(", ") || "N/A"}
                   </p>
-                  <a
-                    href={plant.plant_details.url}
-                    className="text-sm text-blue-500 underline mt-2 inline-block"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <p className="text-sm mb-1">
+                    🔬 {t.genus}: {plant.plant_details?.taxonomy?.genus || "N/A"}
+                  </p>
+                  <p className="text-sm mb-1">
+                    📊 {t.confidence}: {(plant.probability * 100).toFixed(2)}%
+                  </p>
+                  <p className="text-sm mt-2 italic text-gray-600 dark:text-gray-400">
+                    {plant.plant_details?.wiki_description?.value?.slice(0, 100) || "No description available."}
+                  </p>
+                  <button
+                    onClick={() => setSelectedPlant(plant)}
+                    className="text-sm text-blue-500 underline mt-2 inline-block hover:text-blue-700"
                   >
                     {t.more}
-                  </a>
+                  </button>
                 </div>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Fullscreen modal */}
+      <PlantModal plant={selectedPlant} onClose={() => setSelectedPlant(null)} />
     </section>
   );
 }
