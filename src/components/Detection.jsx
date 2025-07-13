@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Trash2, Loader2, Search, BookOpen } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import Fuse from "fuse.js";
 
 export default function Detection() {
@@ -41,7 +41,7 @@ export default function Detection() {
       const res = await fetch("https://plantvision-backend.onrender.com/api/detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ images: [base64] }),
+        body: JSON.stringify({ images: [base64] })
       });
 
       const data = await res.json();
@@ -65,21 +65,24 @@ export default function Detection() {
 
   const suggestions = result?.suggestions || [];
 
-  const fuse =
-    suggestions.length > 0
-      ? new Fuse(suggestions, {
-          keys: ["plant_name", "plant_details.taxonomy.genus"],
-          threshold: 0.3,
-        })
-      : null;
+  const fuse = new Fuse(suggestions, {
+    keys: [
+      "plant_name",
+      "plant_details.common_names",
+      "plant_details.taxonomy.genus"
+    ],
+    threshold: 0.3
+  });
 
   const filteredResults =
-    search && fuse ? fuse.search(search).map((r) => r.item) : suggestions;
+    search.trim() === ""
+      ? suggestions
+      : fuse.search(search.trim()).map((r) => r.item);
 
   return (
-    <section className="py-20 px-6 bg-green-50 dark:bg-gray-900 min-h-screen">
+    <section className="py-20 bg-green-50 dark:bg-gray-900 px-6">
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl font-bold mb-2 text-green-700 dark:text-green-400">Upload a Plant Image</h2>
+        <h2 className="text-3xl font-bold mb-4 text-green-700 dark:text-green-400">Upload a Plant Image</h2>
         <p className="text-gray-600 dark:text-gray-300 mb-6">
           Drag and drop or upload a plant photo to identify its species.
         </p>
@@ -92,7 +95,7 @@ export default function Detection() {
               handleImageUpload({ target: { files: e.dataTransfer.files } });
             }
           }}
-          className="border-4 border-dashed rounded-xl p-6 bg-white dark:bg-gray-800 hover:shadow-md transition"
+          className="border-4 border-dashed rounded-xl p-6 bg-white dark:bg-gray-800 hover:shadow-lg transition"
         >
           <input
             type="file"
@@ -133,22 +136,26 @@ export default function Detection() {
 
         {error && <p className="mt-4 text-red-600 dark:text-red-400 font-medium">⚠️ {error}</p>}
 
-        {result?.suggestions?.length > 0 && (
+        {filteredResults.length > 0 && (
           <div className="mt-10">
             <input
               type="text"
-              placeholder="Search plant name or genus..."
+              placeholder="Search plant name or genus…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="mb-6 px-4 py-2 rounded-lg w-full max-w-md mx-auto text-black dark:text-white bg-gray-100 dark:bg-gray-800 border dark:border-gray-700"
             />
+
             <div className="grid md:grid-cols-3 gap-6">
               {filteredResults.slice(0, 3).map((plant, index) => {
-                const name = plant.plant_name || "Unknown";
-                const common = plant.plant_details?.common_names?.join(", ");
-                const genus = plant.plant_details?.taxonomy?.genus;
+                const name = plant.plant_name;
+                const common = plant.plant_details?.common_names?.join(", ") || "N/A";
+                const genus = plant.plant_details?.taxonomy?.genus || "N/A";
+                const confidence = (plant.probability * 100).toFixed(2);
                 const description = plant.plant_details?.wiki_description?.value || "No description available.";
-                const link = plant.plant_details?.url;
+                const wikiUrl =
+                  plant.plant_details?.url ||
+                  `https://en.wikipedia.org/wiki/${encodeURIComponent(name)}`;
 
                 return (
                   <div
@@ -156,30 +163,18 @@ export default function Detection() {
                     className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md hover:shadow-xl transition transform hover:scale-105"
                   >
                     <h3 className="text-lg font-bold text-green-700 dark:text-green-400 mb-1">{name}</h3>
-                    {common && common !== "N/A" && (
-                      <p className="text-sm mb-1">🌿 <b>Common Names:</b> {common}</p>
-                    )}
-                    {genus && genus !== "N/A" && (
-                      <p className="text-sm mb-1">🔬 <b>Genus:</b> {genus}</p>
-                    )}
-                    <p className="text-sm mb-1">📊 <b>Confidence:</b> {(plant.probability * 100).toFixed(2)}%</p>
-                    <p className="text-sm mt-2 italic text-gray-600 dark:text-gray-400">
-                      {description}
-                    </p>
-                    {link ? (
-                      <a
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline inline-flex items-center gap-1 mt-2 text-sm"
-                      >
-                        <BookOpen size={14} /> View more →
-                      </a>
-                    ) : (
-                      <p className="text-sm text-gray-400 mt-2 flex items-center gap-1">
-                        <BookOpen size={14} /> More info not available
-                      </p>
-                    )}
+                    <p className="text-sm mb-1">🌿 Common Names: {common}</p>
+                    <p className="text-sm mb-1">🔬 Genus: {genus}</p>
+                    <p className="text-sm mb-1">📊 Confidence: {confidence}%</p>
+                    <p className="text-sm mt-2 italic text-gray-600 dark:text-gray-400">{description}</p>
+                    <a
+                      href={wikiUrl}
+                      className="text-sm text-blue-500 underline mt-2 inline-block"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      🔍 View more →
+                    </a>
                   </div>
                 );
               })}
